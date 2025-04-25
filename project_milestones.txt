@@ -1,0 +1,103 @@
+1. used arxiv api and multithreading to gather article data for nearly 30 thousand Math, Statistics, and CS articles
+2. collected the following features during initial parsing :['id', 'title', 'title_length', 'abstract', 'abstract_length', 'authors','num_authors', 'published_date', 'days_since_pub', 'updated_date', 'days_since_update', 'comment', 'primary_category', 'categories','pdf_url', 'figures', 'references', 'word_count', 'pdf_accessible','title_top_ngrams', 'abstract_readability', 'abstract_top_words','body_top_words', 'body_top_ngrams', 'body_lemmatized', 'full_body']
+3. paired with semantic scholar api to collect citation data for articles
+4. used natural language processing to analyze common information patterns in the data and used visualization to display results
+
+
+TODO:
+change output of some text_utils functions for better usage in analysis
+- top_ngrams: filter for count >2. also parse function output to output a clean list
+possibly worth just saving the first n-gram only 
+
+new functions ( to implement for both body and abstracat)
+n_gram density 
+top word 
+top word density 
+num_unique
+unique_density 
+
+-----------------------
+
+
+PROJECT SUMMARY: Citation Impact Prediction from ArXiv + Semantic Scholar Data
+
+---
+
+GOAL:
+Build a supervised NLP pipeline to predict long-term citation impact of academic papers using lightweight features from titles, abstracts, and structured metadata. Source papers from arXiv and enrich metadata via Semantic Scholar API.
+
+---
+
+PHASE 1: DATA COLLECTION
+
+ArXiv:
+- Used Colab to run a multithreaded paper fetch script (~2,000 papers across 10 math/stat categories).
+- Only title, abstract, metadata (date, categories, authors) are retained.
+- Full body parsing removed to speed up processing and avoid PDF-related issues.
+
+Semantic Scholar:
+- Will enrich arXiv dataset using Semantic Scholar API.
+- Preferred identifiers: arXiv ID > DOI > Title (fallback).
+- Will extract: citationCount, referenceCount, figure count (if available).
+- Plan to define "isHighlyCited" label after analyzing citation distribution.
+
+---
+
+PHASE 2: JOIN STRATEGY
+
+Best join order:
+1. arXiv ID (exact)
+2. DOI (fallback for journal-published)
+3. Title (fuzzy, fallback only)
+
+Expected match rate: ~90% if both sources are filtered similarly and focused on arXiv content.
+
+---
+
+PHASE 3: FEATURE ENGINEERING
+
+Focus: simple, interpretable, and robust features based on title + abstract only.
+
+Final features include:
+- title_word_count / abstract_word_count
+- title_word_diversity / abstract_word_diversity (unique words / total words)
+- title_avg_word_len / abstract_avg_word_len
+- title_avg_sent_len / abstract_avg_sent_len
+- abstract_readability (Flesch-Kincaid, etc.)
+
+Dropped:
+- Top n-grams (too noisy, low frequency in short texts)
+- Body text parsing entirely
+
+---
+
+LABEL DESIGN (SUPERVISED TASK)
+
+- Will define "isHighlyCited" dynamically based on the dataset's citation count distribution.
+- Strategy:
+  - Use percentile cutoff (e.g., top 25% or 75th percentile)
+  - Alternatively, a fixed threshold (e.g., citation_count >= 100) if distribution supports it
+
+---
+
+TOOLING / PERFORMANCE
+
+- Colab preferred for faster I/O and fewer resource limits
+- Used ThreadPoolExecutor for concurrent fetching + parsing
+- PDF parsing removed (too fragile, not needed for features)
+- Semantic Scholar will provide citation and reference data
+
+---
+
+FINAL GOALS
+
+- Clean dataset of ~20–30K papers with title/abstract-based features
+- Labeled data for binary classification (highly cited vs not)
+- Build baseline models (logistic regression, random forest, etc.)
+- Analyze which features most predict citation impact
+- Save processed data and scripts for reproducibility
+
+---
+
+Next steps: wait for S2 API key, finish article fetching from arXiv, join datasets, finalize `text_utils.py` with only necessary functions, and start modeling.
+
