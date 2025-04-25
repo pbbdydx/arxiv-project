@@ -62,7 +62,7 @@ This project is licensed under the MIT License.
 
 ---
 
-> Author: [Your Name Here]
-> Project Start Date: [Month Year]
+> Author: Prajwal Bhandari
+> Project Start Date: April 2025
 > Status: Active (Paused during final exam period)
 
