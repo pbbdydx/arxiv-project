@@ -4,21 +4,6 @@
 4. used natural language processing to analyze common information patterns in the data and used visualization to display results
 
 
-TODO:
-change output of some text_utils functions for better usage in analysis
-- top_ngrams: filter for count >2. also parse function output to output a clean list
-possibly worth just saving the first n-gram only 
-
-new functions ( to implement for both body and abstracat)
-n_gram density 
-top word 
-top word density 
-num_unique
-unique_density 
-
------------------------
-
-
 PROJECT SUMMARY: Citation Impact Prediction from ArXiv + Semantic Scholar Data
 
 ---
@@ -95,6 +80,7 @@ FINAL GOALS
 - Labeled data for binary classification (highly cited vs not)
 - Build baseline models (logistic regression, random forest, etc.)
 - Analyze which features most predict citation impact
+- Analyze differences in open access and non-open access papers for citation counts; also see if it depends on the field as well. (ANOVA AND ANCOVA, hypothesis testing, parametric and non-parametric difference of mean tests)
 - Save processed data and scripts for reproducibility
 
 ---

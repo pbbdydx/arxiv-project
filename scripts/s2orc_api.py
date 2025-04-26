@@ -10,7 +10,7 @@ HEADERS = {"x-api-key": API_KEY} if API_KEY else {}
 # Query settings
 QUERY = "machine learning OR statistics OR optimization OR data science"
 FIELDS = "title,abstract,year,citationCount,fieldsOfStudy"
-LIMIT = 100  # max per request
+LIMIT = 1  # max per request
 MAX_RESULTS = 30000
 OUTPUT_FILE = "semantic_papers.jsonl"
 

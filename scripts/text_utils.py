@@ -1,118 +1,79 @@
 import re
 import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import textstat
+from nltk.tokenize import word_tokenize, sent_tokenize
+from textstat import flesch_reading_ease
 
-nltk.download('stopwords')
 nltk.download('punkt')
-stopwords = set(stopwords.words('english'))
-
-
-def clean_text(text):
-    '''
-    text: unformatted text
-    return: cleaned text
-    '''
-    
-    text = re.sub(r"[^a-zA-Z\s]", "", text) # remove punctuation
-    text = text.lower()
-    tokens = nltk.word_tokenize(text) # tokenize text
-    tokens = [word for word in tokens if word not in stopwords] # remove stop words
-    
-    return tokens
+nltk.download('punkt_tab')
 
 def word_count(text):
-    '''
-    text: unformatted text
-    return: word count
-    '''
-    tokens = clean_text(text)
+    tokens = re.findall(r'\b[a-zA-Z]{2,}\b', text)
     return len(tokens)
 
-def get_top_ngrams(text, n = 3, top_n = 1):
-    '''
-    Note: n-grams are used to find the most common phrases in the text.
-    An n-gram is a sequence of n-tokens or words from the text that are frequenly used together.
-    
-    text: unformatted text
-    n: n-gram size
-    top_n: number of top n-grams to return
-    return: list of top_n n-grams
-    '''
-    text = clean_text(text)
-    grams = nltk.ngrams(text, n) # create n-grams
-    ngram_freq = nltk.FreqDist(grams) # count n-grams
-    top_ngrams = ngram_freq.most_common(top_n) # get top n-grams
-    
-    return top_ngrams
-    
-    
-def get_top_words(text, top_n = 10):
-    '''
-    text: unformatted text
-    top_n: number of top words to return
-    return: list of top_n words
-    '''
-    tokens = clean_text(text)
-    word_freq = nltk.FreqDist(tokens)
-    top_words = word_freq.most_common(top_n) # get top words
-    
-    return top_words
+def word_diversity(text):
+    tokens = re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
+    unique_tokens = set(tokens)
+    return len(unique_tokens) / max(len(tokens), 1)
 
-def remove_stopwords(tokens):
-    '''
-    tokens: tokenized text from clean_text function
-    stopwords: set of nltk stopwords
-    return: text without stop words
-    '''
-    stopwords = set(stopwords.words('english'))
-    return [word for word in tokens in word not in stopwords]
+def avg_word_length(text):
+    tokens = re.findall(r'\b[a-zA-Z]{2,}\b', text)
+    return sum(len(word) for word in tokens) / max(len(tokens), 1)
 
+def avg_sentence_length(text):
+    sentences = sent_tokenize(text)
+    if not sentences:
+        return 0
+    total_words = sum(len(word_tokenize(sentence)) for sentence in sentences)
+    return total_words / len(sentences)
 
 def readability_score(text):
-    '''
-    text: unformatted text
-    return: readability score
-    '''
-    
-    return textstat.flesch_reading_ease(text) # return readability score
+    try:
+        score = flesch_reading_ease(text)
+    except:
+        score = 0
+    return score
 
-def title_features(title):
-    tokens = nltk.word_tokenize(title)
-    
-    return{
-        'title_length': len(tokens),
-        'avg_word_length': len(title) / len(tokens),
-        'poses_question': '?' in title,
-        'colon': ":" in title
+# Sentiment Analysis (Simple placeholder for extension)
+from nltk.sentiment import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+sia = SentimentIntensityAnalyzer()
+
+def sentiment_class(text):
+    scores = sia.polarity_scores(text)
+    compound = scores['compound']
+    if compound >= 0.6:
+        return "Optimistic"
+    elif 0.2 <= compound < 0.6:
+        return "Positive"
+    elif -0.2 < compound < 0.2:
+        return "Neutral"
+    elif -0.6 < compound <= -0.2:
+        return "Cautious"
+    else:
+        return "Negative"
+
+def get_title_features(title):
+    return {
+    "title_word_count": word_count(title),
+    "title_word_diversity": word_diversity(title),
+    "title_avg_word_len": avg_word_length(title),
+    "title_avg_sent_len": avg_sentence_length(title),
+    "title_sentiment": sentiment_class(title)
     }
-    
-def lemmatize(tokens):
-    '''
-    tokens: tokenized text from abstract
-    returns: a text blob with lemmatized infinitives. eg: studied -> study
-    '''
-    pass
-    lemmatizer = WordNetLemmatizer()
-    return " ".join([lemmatizer.lemmatize(t) for t in tokens])
 
-# def make_cols(df, functions):
-#     '''
-#     df: dataframe
-#     functions: list of functions to apply to the dataframe
-#     return: dataframe with new columns
-#     '''
-    
-#     if functions is None:
-#         return df
-#     else:
-#         for function in functions:
-#             # only apply funndtions on the abstract since we do not have the full article text
-#             # and we do not want to download the full article text
-#             if function.__name__ == 'title_features':
-#                 title_features_dict = df['title'].apply(function)
-#                 features_df = pd.DataFrame(title_features_dict.tolist())
-#                 df = pd.concat([df,features_df], axis = 1)
-#             df[function.__name__] = df['abstract'].apply(function)
-#         return df
+def get_abstract_features(abstract):
+    return {
+    "abstract_word_count": word_count(abstract),
+    "abstract_word_diversity": word_diversity(abstract),
+    "abstract_avg_word_len": avg_word_length(abstract),
+    "abstract_avg_sent_len": avg_sentence_length(abstract),
+    "abstract_readability": readability_score(abstract),
+    "abstract_sentiment": sentiment_class(abstract)
+    }
+
+def get_all_text_features(row):
+    return {
+    **get_title_features(row.get("title", "")),
+    **get_abstract_features(row.get("abstract", ""))
+    }
+
